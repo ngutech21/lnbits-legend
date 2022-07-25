@@ -3,31 +3,126 @@
 <q-card>
   <q-card-section>
     <h5 class="text-subtitle1 q-mt-none q-mb-md">
-      Frameworks used by {{SITE_TITLE}}
+      Scheduler
     </h5>
-    <q-list>
-      <q-item
-        v-for="tool in tools"
-        :key="tool.name"
-        tag="a"
-        :href="tool.url"
-        target="_blank"
-      >
-        {% raw %}
-        <!-- with raw Flask won't try to interpret the Vue moustaches -->
-        <q-item-section>
-          <q-item-label>{{ tool.name }}</q-item-label>
-          <q-item-label caption>{{ tool.language }}</q-item-label>
-        </q-item-section>
-        {% endraw %}
-      </q-item>
-    </q-list>
     <q-separator class="q-my-lg"></q-separator>
+
+
+    <q-dialog v-model="formDialog.show" position="top" @hide="closeFormDialog">
+    <q-card class="q-pa-lg q-pt-xl lnbits__dialog-card">
+      <q-form @submit="sendFormData" class="q-gutter-md">
+        <q-select
+          filled
+          dense
+          emit-value
+          v-model="formDialog.data.wallet"
+          :options="g.user.walletOptions"
+          label="Wallet *"
+        >
+        </q-select>
+
+        <q-input
+          filled
+          dense
+          v-model.trim="formDialog.data.description"
+          type="text"
+          label="description"
+        ></q-input>
+        
+        <q-input
+          filled
+          dense
+          v-model.trim="formDialog.data.minute"
+          type="number"
+          label="minute"
+        ></q-input>
+
+        <q-input
+          filled
+          dense
+          v-model.trim="formDialog.data.lnurl"
+          type="text"
+          label="lnurl"
+        ></q-input>
+
+        <div class="row q-mt-lg">
+            <q-btn
+              v-if="formDialog.data.id"
+              unelevated
+              color="primary"
+              type="submit"
+              >Update</q-btn
+            >
+            <q-btn
+              v-else
+              unelevated
+              color="primary"
+              :disable="formDialog.data.wallet == null"
+              type="submit"
+              >Create</q-btn
+            >
+            <q-btn v-close-popup flat color="grey" class="q-ml-auto"
+              >Cancel</q-btn
+            >
+          </div>
+      </q-form>
+    </q-card>
+  </q-dialog>
+
+
+
+
+<q-table
+          dense
+          flat
+          :data="jobconfigs"
+          row-key="id"
+        >
+        {% raw %}
+          <template v-slot:header="props">
+            <q-tr :props="props">
+              <q-th auto-width style="text-align: left">Id</q-th>
+              <q-th auto-width style="text-align: left">Description</q-th>
+              <q-th auto-width style="text-align: left">Lnurl</q-th>
+              <q-th auto-width style="text-align: left"></q-th>
+
+            </q-tr>
+          </template>
+          <template v-slot:body="props">
+            <q-tr :props="props">
+              <q-td auto-width>{{ props.row.id }}</q-td>
+              <q-td auto-width>{{ props.row.description }}</q-td>
+              <q-td auto-width>{{ props.row.lnurl }}</q-td>
+
+              <q-td auto-width>
+                <q-btn
+                  flat
+                  dense
+                  size="xs"
+                  @click="openUpdateDialog(props.row.id)"
+                  icon="edit"
+                  color="light-blue"
+                ></q-btn>
+                <q-btn
+                  flat
+                  dense
+                  size="xs"
+                  @click="deleteJobConfig(props.row.id)"
+                  icon="cancel"
+                  color="pink"
+                ></q-btn>
+              </q-td>
+            </q-tr>
+          </template>
+          {% endraw %}
+</q-table>
+
     <p>
-      A magical "g" is always available, with info about the user, wallets and
-      extensions:
+      Wallets:
     </p>
-    <code class="text-caption">{% raw %}{{ g }}{% endraw %}</code>
+    <code class="text-caption">{% raw %} {{this.g.user.wallets}}  {% endraw %}</code>
+      
+    
   </q-card-section>
 </q-card>
 {% endblock %} {% block scripts %} {{ window_vars(user) }}
@@ -37,8 +132,46 @@
     mixins: [windowMixin],
     data: function () {
       return {
-        tools: []
+        tools: [],
+        jobconfigs: [{id:1, description:"foo", lnurl:"lnurl123", wallet:{id:1}},
+                    {id:2, description:"bar", lnurl:"lnurl456", wallet:{id:2}}],
+        formDialog: {
+          show: false,
+          data: {
+             wallet: { id: "1fdb73f5a2384d6ea1ca347268d36829", 
+                      name: "default", 
+                      adminkey: "92e452e0710b4098ac98eb4d70a7ebb7", 
+                      inkey: "f613eeb605d34405adb699d4b3043920", 
+                      msat: 5000000, 
+                      sat: 5000, 
+                      fsat: "5,000", 
+                      url: "/wallet?usr=068005e067644c689dff3b639b9f1c3c&wal=1fdb73f5a2384d6ea1ca347268d36829" }
+          }
+        }
+
       }
+    },
+    methods: {
+        openUpdateDialog(configId) {
+          console.log('openUpdateDialog')
+          const jobconfig = _.findWhere(this.jobconfigs, {id: configId})
+          console.log("found config "+ jobconfig + " data "+ jobconfig)
+          this.formDialog.data = _.clone(jobconfig)
+          //this.formDialog.data.wallet = {id:1, name:"default"}
+          this.formDialog.show = true
+        },
+        closeFormDialog() {
+          this.resetFormData()
+        },
+        sendFormData() {
+          console.log("send form data")
+        },
+        resetFormData() {
+          this.formDialog = {
+            show: false,
+            data: {}
+        }
+      },
     },
     created: function () {
       var self = this
