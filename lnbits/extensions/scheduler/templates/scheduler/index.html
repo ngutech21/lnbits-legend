@@ -5,6 +5,9 @@
     <h5 class="text-subtitle1 q-mt-none q-mb-md">
       Scheduler
     </h5>
+    <q-btn unelevated color="primary" @click="formDialog.show = true"
+          >New job config</q-btn
+        >
     <q-separator class="q-my-lg"></q-separator>
 
 
@@ -152,6 +155,35 @@
       }
     },
     methods: {
+        getTools(){
+          var self = this
+          // axios is available for making requests
+          axios({
+            method: 'GET',
+            url: '/scheduler/api/v1/tools',
+            headers: {
+              'X-scheduler-header': 'not-used'
+            }
+          }).then(function (response) {
+            self.tools = response.data
+          })
+        },
+        getJobConfigs() {
+          LNbits.api
+            .request(
+              'GET',
+              '/scheduler/api/v1/jobconfigs',
+              this.g.user.wallets[0].inkey
+            )
+            .then(response => {
+              console.log(response.data)
+              this.jobconfigs = response.data
+            })
+            .catch(err => {
+              //clearInterval(this.checker) FIXME
+              LNbits.utils.notifyApiError(err)
+            })
+        },
         openUpdateDialog(configId) {
           console.log('openUpdateDialog')
           const jobconfig = _.findWhere(this.jobconfigs, {id: configId})
@@ -174,18 +206,8 @@
       },
     },
     created: function () {
-      var self = this
-
-      // axios is available for making requests
-      axios({
-        method: 'GET',
-        url: '/scheduler/api/v1/tools',
-        headers: {
-          'X-scheduler-header': 'not-used'
-        }
-      }).then(function (response) {
-        self.tools = response.data
-      })
+      this.getTools()
+      this.getJobConfigs()
     }
   })
 </script>

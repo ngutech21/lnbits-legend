@@ -6,9 +6,50 @@
 # (use httpx just like requests, except instead of response.ok there's only the
 #  response.is_error that is its inverse)
 
+from lnbits.extensions.scheduler.models import CreateJobConfig
 from . import scheduler_ext
+from fastapi.params import Depends
+from loguru import logger
+import traceback
+
+logger.add("out.log", backtrace=True, diagnose=True)
+
+from lnbits.decorators import (
+    WalletTypeInfo,
+    get_key_type,
+    require_admin_key,
+    require_invoice_key,
+)
+
+
+from .crud import create_jobconfig, get_jobconfigs
 
 # add your endpoints here
+
+
+@scheduler_ext.post("/api/v1/jobconfigs")
+async def api_charge_create(
+    data: CreateJobConfig, wallet: WalletTypeInfo = Depends(require_invoice_key)
+):
+    charge = await create_jobconfig(user=wallet.wallet.user, data=data)
+    return charge.dict()
+
+
+@scheduler_ext.get("/api/v1/jobconfigs")
+async def api_jobconfig_retrieve(wallet: WalletTypeInfo = Depends(get_key_type)):
+    # return {id:1}
+    logger.info("jobconfig_retrieve")
+    print("jobconfig_retrieve")
+    try:
+        return [
+            {**jobconfig.dict()}
+            for jobconfig in await get_jobconfigs(wallet.wallet.user)
+        ]
+    except:
+        print("error")
+        traceback.print_exc()
+        logger.error("error calling api_jobconfig_retrieve")
+        return ""
 
 
 @scheduler_ext.get("/api/v1/tools")
