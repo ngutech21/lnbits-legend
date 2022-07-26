@@ -6,6 +6,9 @@
 # (use httpx just like requests, except instead of response.ok there's only the
 #  response.is_error that is its inverse)
 
+from http import HTTPStatus
+
+from fastapi import Query
 from lnbits.extensions.scheduler.models import CreateJobConfig
 from . import scheduler_ext
 from fastapi.params import Depends
@@ -16,23 +19,29 @@ logger.add("out.log", backtrace=True, diagnose=True)
 
 from lnbits.decorators import (
     WalletTypeInfo,
-    get_key_type,
-    require_admin_key,
-    require_invoice_key,
+    get_key_type
 )
 
 
-from .crud import create_jobconfig, get_jobconfigs
+from .crud import create_jobconfig, get_jobconfigs, update_jobconfig
 
 # add your endpoints here
 
 
 @scheduler_ext.post("/api/v1/jobconfigs")
-async def api_charge_create(
-    data: CreateJobConfig, wallet: WalletTypeInfo = Depends(require_invoice_key)
+async def api_jobconfig_create(
+    data: CreateJobConfig, wallet: WalletTypeInfo = Depends(get_key_type)
 ):
-    charge = await create_jobconfig(user=wallet.wallet.user, data=data)
-    return charge.dict()
+    conf = await create_jobconfig(user=wallet.wallet.user, data=data)
+    return conf.dict()
+
+
+@scheduler_ext.put("/api/v1/jobconfigs/{jobconfig_id}")
+async def api_jobconfig_update(
+    data: CreateJobConfig, jobconfig_id: str= Query(None), wallet: WalletTypeInfo = Depends(get_key_type)
+):
+    conf = await update_jobconfig(user=wallet.wallet.user, jobconfig_id=jobconfig_id, data=data)
+    return conf.dict()
 
 
 @scheduler_ext.get("/api/v1/jobconfigs")

@@ -27,9 +27,21 @@ async def create_jobconfig(user: str, data: CreateJobConfig) -> JobConfig:
     )
     return await get_jobconfig(jobconfig_id)
 
+async def update_jobconfig(user: str, jobconfig_id: str,  data: CreateJobConfig) -> JobConfig:
+    logger.debug(f"create_jobconfig user {user} data {data}")
+    rows = await db.execute(
+        """UPDATE scheduler.job_config
+	       SET wallet=?, lnurl=?, description=?, timer_minute=?
+	       WHERE id=?;""",
+        (data.wallet, data.lnurl, data.description, data.timer_minute, jobconfig_id),
+    )
+    return await get_jobconfig(jobconfig_id)
+
 
 async def get_jobconfig(job_config_id: str) -> JobConfig:
     rows = await db.fetchall(
         """SELECT * FROM scheduler.job_config WHERE id = ?""", (job_config_id)
     )
-    return [JobConfig.from_row(row) for row in rows]
+    if len(rows) > 0:
+        return JobConfig.from_row(rows[0]) 
+    return 

@@ -35,7 +35,7 @@
         <q-input
           filled
           dense
-          v-model.trim="formDialog.data.minute"
+          v-model.trim="formDialog.data.timer_minute"
           type="number"
           label="minute"
         ></q-input>
@@ -136,6 +136,7 @@
     data: function () {
       return {
         tools: [],
+        //FIXME remove testdata
         jobconfigs: [{id:1, description:"foo", lnurl:"lnurl123", wallet:{id:1}},
                     {id:2, description:"bar", lnurl:"lnurl456", wallet:{id:2}}],
         formDialog: {
@@ -157,7 +158,6 @@
     methods: {
         getTools(){
           var self = this
-          // axios is available for making requests
           axios({
             method: 'GET',
             url: '/scheduler/api/v1/tools',
@@ -167,6 +167,33 @@
           }).then(function (response) {
             self.tools = response.data
           })
+        },
+        createJobConfig(wallet, data) {
+          LNbits.api
+            .request('POST', '/scheduler/api/v1/jobconfigs', wallet.inkey, data)
+            .then(response => {
+              //this.jobconfigs.push(response.data) FIXME
+              this.formDialog.show = false
+              this.resetFormData()
+              this.getJobConfigs()
+            })
+            .catch(err => {
+              LNbits.utils.notifyApiError(err)
+            })
+        },
+        updateJobConfig(wallet, data) {
+          console.log("update")
+          LNbits.api
+            .request('PUT', '/scheduler/api/v1/jobconfigs/'+ data.id, wallet.inkey, data)
+            .then(response => {
+              //this.jobconfigs.push(response.data) FIXME
+              this.formDialog.show = false
+              this.resetFormData()
+              this.getJobConfigs()
+            })
+            .catch(err => {
+              LNbits.utils.notifyApiError(err)
+            })
         },
         getJobConfigs() {
           LNbits.api
@@ -197,6 +224,21 @@
         },
         sendFormData() {
           console.log("send form data")
+          const wallet = _.findWhere(this.g.user.wallets, {
+             id: this.formDialog.data.wallet
+          })
+          var data = _.omit(this.formDialog.data, 'wallet')
+          data.timer_minute = parseInt(this.formDialog.data.timer_minute)
+          data.description = this.formDialog.data.description
+          data.lnurl = this.formDialog.data.lnurl
+          data.wallet = this.formDialog.data.wallet
+
+          console.log("sendformData "+ JSON.stringify(data) +" wallet " + JSON.stringify(wallet) )
+          if (data.id){
+            this.updateJobConfig(wallet, data)
+          }else{
+            this.createJobConfig(wallet, data)
+          }
         },
         resetFormData() {
           this.formDialog = {

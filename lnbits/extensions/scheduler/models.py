@@ -16,8 +16,7 @@ class JobConfig(BaseModel):
 
 
 class CreateJobConfig(BaseModel):
-    id: str = Query(None)
-    wallet: str = Query(None)
-    lnurl: str = Query(None)
-    timer_minute: int = Query(None)
-    description: str = Query(None)
+    lnurl: str = Query(...)
+    wallet: str = Query(...)
+    timer_minute: int = Query(...)
+    description: str = Query(...)
