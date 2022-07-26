@@ -195,6 +195,18 @@
               LNbits.utils.notifyApiError(err)
             })
         },
+        deleteJobConfig(id) {
+          console.log("delete")
+          var self = this
+          LNbits.api
+            .request('DELETE', '/scheduler/api/v1/jobconfigs/'+ id, self.g.user.wallets[0].adminkey)
+            .then(response => {
+              this.getJobConfigs()
+            })
+            .catch(err => {
+              LNbits.utils.notifyApiError(err)
+            })
+        },
         getJobConfigs() {
           LNbits.api
             .request(

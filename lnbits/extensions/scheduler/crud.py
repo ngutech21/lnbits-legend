@@ -37,6 +37,14 @@ async def update_jobconfig(user: str, jobconfig_id: str,  data: CreateJobConfig)
     )
     return await get_jobconfig(jobconfig_id)
 
+async def delete_jobconfig(user: str, jobconfig_id: str) -> None:
+    logger.debug(f"delete_jobconfig user {user}")
+    return await db.execute(
+        """DELETE FROM scheduler.job_config
+	       WHERE id=?;""",
+        (jobconfig_id),
+    )
+
 
 async def get_jobconfig(job_config_id: str) -> JobConfig:
     rows = await db.fetchall(

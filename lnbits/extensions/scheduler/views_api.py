@@ -23,7 +23,7 @@ from lnbits.decorators import (
 )
 
 
-from .crud import create_jobconfig, get_jobconfigs, update_jobconfig
+from .crud import create_jobconfig, delete_jobconfig, get_jobconfigs, update_jobconfig
 
 # add your endpoints here
 
@@ -42,6 +42,13 @@ async def api_jobconfig_update(
 ):
     conf = await update_jobconfig(user=wallet.wallet.user, jobconfig_id=jobconfig_id, data=data)
     return conf.dict()
+
+@scheduler_ext.delete("/api/v1/jobconfigs/{jobconfig_id}")
+async def api_jobconfig_update(
+    jobconfig_id: str= Query(None), wallet: WalletTypeInfo = Depends(get_key_type)
+):
+    await delete_jobconfig(user=wallet.wallet.user, jobconfig_id=jobconfig_id)
+    
 
 
 @scheduler_ext.get("/api/v1/jobconfigs")
