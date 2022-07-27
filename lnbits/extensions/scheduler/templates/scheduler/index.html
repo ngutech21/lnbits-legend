@@ -1,15 +1,15 @@
 {% extends "base.html" %} {% from "macros.jinja" import window_vars with context
 %} {% block page %}
+
+<div class="row q-col-gutter-md">
+<div class="col-12 col-md-7 q-gutter-y-md">
 <q-card>
   <q-card-section>
     <h5 class="text-subtitle1 q-mt-none q-mb-md">
       Scheduler
     </h5>
-    <q-btn unelevated color="primary" @click="formDialog.show = true"
-          >New job config</q-btn
-        >
+    <q-btn unelevated color="primary" @click="formDialog.show = true">New job config</q-btn>
     <q-separator class="q-my-lg"></q-separator>
-
 
     <q-dialog v-model="formDialog.show" position="top" @hide="closeFormDialog">
     <q-card class="q-pa-lg q-pt-xl lnbits__dialog-card">
@@ -54,19 +54,15 @@
               unelevated
               color="primary"
               type="submit"
-              >Update</q-btn
-            >
+              >Update</q-btn>
             <q-btn
               v-else
               unelevated
               color="primary"
               :disable="formDialog.data.wallet == null"
               type="submit"
-              >Create</q-btn
-            >
-            <q-btn v-close-popup flat color="grey" class="q-ml-auto"
-              >Cancel</q-btn
-            >
+              >Create</q-btn>
+            <q-btn v-close-popup flat color="grey" class="q-ml-auto">Cancel</q-btn>
           </div>
       </q-form>
     </q-card>
@@ -81,7 +77,6 @@
           :data="jobconfigs"
           row-key="id"
         >
-        {% raw %}
           <template v-slot:header="props">
             <q-tr :props="props">
               <q-th auto-width style="text-align: left">Id</q-th>
@@ -117,17 +112,29 @@
               </q-td>
             </q-tr>
           </template>
-          {% endraw %}
 </q-table>
-
-    <p>
-      Wallets:
-    </p>
-    <code class="text-caption">{% raw %} {{this.g.user.wallets}}  {% endraw %}</code>
-      
-    
   </q-card-section>
 </q-card>
+</div>
+
+<div class="col-12 col-md-5 q-gutter-y-md">
+    <q-card>
+      <q-card-section>
+        <h6 class="text-subtitle1 q-my-none">
+          {{SITE_TITLE}} Scheduler extension
+        </h6>
+      </q-card-section>
+      <q-card-section class="q-pa-none">
+        <q-separator></q-separator>
+        <q-list>
+          {% include "scheduler/_api_docs.html" %}
+        </q-list>
+      </q-card-section>
+    </q-card>
+  </div>
+
+</div>
+
 {% endblock %} {% block scripts %} {{ window_vars(user) }}
 <script>
   new Vue({
@@ -136,20 +143,11 @@
     data: function () {
       return {
         tools: [],
-        //FIXME remove testdata
-        jobconfigs: [{id:1, description:"foo", lnurl:"lnurl123", wallet:{id:1}},
-                    {id:2, description:"bar", lnurl:"lnurl456", wallet:{id:2}}],
+        jobconfigs: [],
         formDialog: {
           show: false,
           data: {
-             wallet: { id: "1fdb73f5a2384d6ea1ca347268d36829", 
-                      name: "default", 
-                      adminkey: "92e452e0710b4098ac98eb4d70a7ebb7", 
-                      inkey: "f613eeb605d34405adb699d4b3043920", 
-                      msat: 5000000, 
-                      sat: 5000, 
-                      fsat: "5,000", 
-                      url: "/wallet?usr=068005e067644c689dff3b639b9f1c3c&wal=1fdb73f5a2384d6ea1ca347268d36829" }
+             wallet: {  }
           }
         }
 
@@ -162,7 +160,6 @@
             method: 'GET',
             url: '/scheduler/api/v1/tools',
             headers: {
-              'X-scheduler-header': 'not-used'
             }
           }).then(function (response) {
             self.tools = response.data
@@ -182,7 +179,6 @@
             })
         },
         updateJobConfig(wallet, data) {
-          console.log("update")
           LNbits.api
             .request('PUT', '/scheduler/api/v1/jobconfigs/'+ data.id, wallet.inkey, data)
             .then(response => {
@@ -196,7 +192,6 @@
             })
         },
         deleteJobConfig(id) {
-          console.log("delete")
           var self = this
           LNbits.api
             .request('DELETE', '/scheduler/api/v1/jobconfigs/'+ id, self.g.user.wallets[0].adminkey)
@@ -224,11 +219,8 @@
             })
         },
         openUpdateDialog(configId) {
-          console.log('openUpdateDialog')
           const jobconfig = _.findWhere(this.jobconfigs, {id: configId})
-          console.log("found config "+ jobconfig + " data "+ jobconfig)
           this.formDialog.data = _.clone(jobconfig)
-          //this.formDialog.data.wallet = {id:1, name:"default"}
           this.formDialog.show = true
         },
         closeFormDialog() {
@@ -245,7 +237,6 @@
           data.lnurl = this.formDialog.data.lnurl
           data.wallet = this.formDialog.data.wallet
 
-          console.log("sendformData "+ JSON.stringify(data) +" wallet " + JSON.stringify(wallet) )
           if (data.id){
             this.updateJobConfig(wallet, data)
           }else{
