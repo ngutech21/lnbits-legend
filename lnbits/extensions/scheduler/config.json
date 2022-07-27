@@ -1,0 +1,6 @@
+{
+  "name": "Scheduler",
+  "short_description": "Schedule ln-payments",
+  "icon": "schedule",
+  "contributors": ["ngutech21"]
+}
