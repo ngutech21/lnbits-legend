@@ -9,7 +9,7 @@ class JobConfig(BaseModel):
     lnurl: str
     timer_minute: int
     description: str
-
+    
     @classmethod
     def from_row(cls, row: Row) -> "JobConfig":
         return cls(**dict(row))
@@ -20,3 +20,4 @@ class CreateJobConfig(BaseModel):
     wallet: str = Query(...)
     timer_minute: int = Query(...)
     description: str = Query(...)
+    

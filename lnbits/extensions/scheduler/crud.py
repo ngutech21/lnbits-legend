@@ -16,6 +16,14 @@ async def get_jobconfigs(user: str) -> List[JobConfig]:
     return [JobConfig.from_row(row) for row in rows]
 
 
+async def get_jobconfig(user: str, id: str) -> JobConfig:
+    logger.debug(f"user {user}")
+    rows = await db.fetchall(
+        """SELECT * FROM scheduler.job_config WHERE "user_name" = ? and id=? """, (user, id)
+    )
+    return rows[0]
+
+
 async def create_jobconfig(user: str, data: CreateJobConfig) -> JobConfig:
     logger.debug(f"create_jobconfig user {user}")
     jobconfig_id = urlsafe_short_hash()

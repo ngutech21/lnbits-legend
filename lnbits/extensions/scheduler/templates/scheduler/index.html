@@ -9,6 +9,8 @@
       Scheduler
     </h5>
     <q-btn unelevated color="primary" @click="formDialog.show = true">New job config</q-btn>
+    <q-btn unelevated color="primary" @click="executeJobConfig()">Execute</q-btn>
+
     <q-separator class="q-my-lg"></q-separator>
 
     <q-dialog v-model="formDialog.show" position="top" @hide="closeFormDialog">
@@ -54,7 +56,8 @@
               unelevated
               color="primary"
               type="submit"
-              >Update</q-btn>
+              >Update</q-btn
+>
             <q-btn
               v-else
               unelevated
@@ -77,6 +80,7 @@
           :data="jobconfigs"
           row-key="id"
         >
+        {% raw %}
           <template v-slot:header="props">
             <q-tr :props="props">
               <q-th auto-width style="text-align: left">Id</q-th>
@@ -112,7 +116,10 @@
               </q-td>
             </q-tr>
           </template>
+          {% endraw %}
 </q-table>
+
+    
   </q-card-section>
 </q-card>
 </div>
@@ -154,6 +161,18 @@
       }
     },
     methods: {
+        executeJobConfig(){
+            var self = this
+            data = this.jobconfigs[0]
+            LNbits.api
+            .request('POST', '/scheduler/api/v1/execute', self.g.user.wallets[0].adminkey, data)
+            .then(response => {
+              console.log("executed")
+            })
+            .catch(err => {
+              LNbits.utils.notifyApiError(err)
+            })
+        },
         getTools(){
           var self = this
           axios({

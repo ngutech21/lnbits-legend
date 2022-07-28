@@ -7,9 +7,11 @@
 #  response.is_error that is its inverse)
 
 from http import HTTPStatus
+from typing import List
 
 from fastapi import Query
-from lnbits.extensions.scheduler.models import CreateJobConfig
+from lnbits.extensions.scheduler.models import CreateJobConfig, JobConfig
+from lnbits.extensions.scheduler.util import pay_invoice
 from . import scheduler_ext
 from fastapi.params import Depends
 from loguru import logger
@@ -26,6 +28,19 @@ from lnbits.decorators import (
 from .crud import create_jobconfig, delete_jobconfig, get_jobconfigs, update_jobconfig
 
 # add your endpoints here
+
+
+@scheduler_ext.post("/api/v1/execute/")
+async def api_jobconfig_execute(
+    data: CreateJobConfig, wallet: WalletTypeInfo = Depends(get_key_type)
+):
+    jobConfig = JobConfig(id=123, wallet=data.wallet, lnurl=data.lnurl, timer_minute=data.timer_minute, description=data.description)
+        
+    pay_invoice(jobConfig)
+    return jobConfig.dict()
+    
+    #conf = await create_jobconfig(user=wallet.wallet.user, data=data)
+    #return conf.dict()
 
 
 @scheduler_ext.post("/api/v1/jobconfigs")
@@ -53,7 +68,6 @@ async def api_jobconfig_update(
 
 @scheduler_ext.get("/api/v1/jobconfigs")
 async def api_jobconfig_retrieve(wallet: WalletTypeInfo = Depends(get_key_type)):
-    # return {id:1}
     logger.info("jobconfig_retrieve")
     print("jobconfig_retrieve")
     try:
