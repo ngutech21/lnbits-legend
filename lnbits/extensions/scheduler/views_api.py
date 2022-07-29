@@ -11,7 +11,7 @@ from typing import List
 
 from fastapi import Query
 from lnbits.extensions.scheduler.models import CreateJobConfig, JobConfig
-from lnbits.extensions.scheduler.util import pay_invoice
+from lnbits.extensions.scheduler.util import pay_jobconfig_invoice
 from . import scheduler_ext
 from fastapi.params import Depends
 from loguru import logger
@@ -27,8 +27,6 @@ from lnbits.decorators import (
 
 from .crud import create_jobconfig, delete_jobconfig, get_jobconfigs, update_jobconfig
 
-# add your endpoints here
-
 
 @scheduler_ext.post("/api/v1/execute/")
 async def api_jobconfig_execute(
@@ -36,11 +34,8 @@ async def api_jobconfig_execute(
 ):
     jobConfig = JobConfig(id=123, wallet=data.wallet, lnurl=data.lnurl, timer_minute=data.timer_minute, description=data.description)
         
-    pay_invoice(jobConfig)
+    await pay_jobconfig_invoice(jobConfig)
     return jobConfig.dict()
-    
-    #conf = await create_jobconfig(user=wallet.wallet.user, data=data)
-    #return conf.dict()
 
 
 @scheduler_ext.post("/api/v1/jobconfigs")
