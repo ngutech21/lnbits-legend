@@ -8,7 +8,8 @@ async def m001_initial(db):
            wallet TEXT NOT NULL,
            lnurl TEXT NOT NULL,
            description TEXT,
-           timer_minute int NOT NULL
+           timer_minute int NOT NULL,
+           amount int NOT NULL
        );
    """
     )

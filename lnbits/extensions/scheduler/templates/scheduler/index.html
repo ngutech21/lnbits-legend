@@ -50,6 +50,14 @@
           label="lnurl"
         ></q-input>
 
+        <q-input
+          filled
+          dense
+          v-model.trim="formDialog.data.amount"
+          type="number"
+          label="amount (sat)"
+        ></q-input>
+
         <div class="row q-mt-lg">
             <q-btn
               v-if="formDialog.data.id"
@@ -85,7 +93,7 @@
             <q-tr :props="props">
               <q-th auto-width style="text-align: left">Id</q-th>
               <q-th auto-width style="text-align: left">Description</q-th>
-              <q-th auto-width style="text-align: left">Lnurl</q-th>
+              <q-th auto-width style="text-align: left">Amount</q-th>
               <q-th auto-width style="text-align: left"></q-th>
 
             </q-tr>
@@ -94,7 +102,7 @@
             <q-tr :props="props">
               <q-td auto-width>{{ props.row.id }}</q-td>
               <q-td auto-width>{{ props.row.description }}</q-td>
-              <q-td auto-width>{{ props.row.lnurl }}</q-td>
+              <q-td auto-width>{{ props.row.amount }}</q-td>
 
               <q-td auto-width>
                 <q-btn

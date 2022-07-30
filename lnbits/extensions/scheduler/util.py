@@ -6,10 +6,11 @@ from lnurl import Lnurl, LnurlResponse
 from lnbits.core.services import pay_invoice
 from lnbits import bolt11
 from loguru import logger
+from typing import Final
 
 async def pay_jobconfig_invoice(config: JobConfig):
-    amount: int = 21000
     print(f"payinvoice {config}")
+    AMOUNT_MSAT: Final = config.amount * 1_000
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
     lnurl = Lnurl(config.lnurl)
@@ -22,7 +23,7 @@ async def pay_jobconfig_invoice(config: JobConfig):
         print(f"callback {result.callback}")
         
         #get invoice
-        invoiceResp: requests.Response = requests.get(f"{result.callback}?amount={amount}", verify=False)
+        invoiceResp: requests.Response = requests.get(f"{result.callback}?amount={AMOUNT_MSAT}", verify=False)
         if invoiceResp.status_code != 200:
             logger.warning("invalid request")
             continue
@@ -31,9 +32,13 @@ async def pay_jobconfig_invoice(config: JobConfig):
         json = invoiceResp.json()
         invoice = json['pr']
         decoded: bolt11.Invoice = bolt11.decode(invoice)
-        validAmount: int = decoded.amount_msat == amount
+        validAmount: int = decoded.amount_msat == config.amount
+        
+        logger.debug(f"bol1.decoded {decoded.payment_hash}  {decoded.amount_msat} valid {AMOUNT_MSAT}")
+        if not validAmount:
+            logger.warning(f"invalid amount {config}")
+            continue
                 
-        print(f"bol1.decoded {decoded.payment_hash}  {decoded.amount_msat} valid {validAmount}")
         
         print(f"invoiceresp {invoiceResp}")
         await pay_invoice(wallet_id=config.wallet, payment_request=invoice,description=f"payment {i}")

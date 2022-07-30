@@ -29,9 +29,9 @@ async def create_jobconfig(user: str, data: CreateJobConfig) -> JobConfig:
     jobconfig_id = urlsafe_short_hash()
     rows = await db.execute(
         """INSERT INTO scheduler.job_config(
-	       id, user_name, wallet, lnurl, description, timer_minute)
-	       VALUES (?, ?, ?, ?, ?, ?);""",
-        (jobconfig_id, user, data.wallet, data.lnurl, data.description, data.timer_minute),
+	       id, user_name, wallet, lnurl, description, timer_minute, amount)
+	       VALUES (?, ?, ?, ?, ?, ?, ?);""",
+        (jobconfig_id, user, data.wallet, data.lnurl, data.description, data.timer_minute, data.amount),
     )
     return await get_jobconfig(jobconfig_id)
 
@@ -39,9 +39,9 @@ async def update_jobconfig(user: str, jobconfig_id: str,  data: CreateJobConfig)
     logger.debug(f"create_jobconfig user {user} data {data}")
     rows = await db.execute(
         """UPDATE scheduler.job_config
-	       SET wallet=?, lnurl=?, description=?, timer_minute=?
+	       SET wallet=?, lnurl=?, description=?, timer_minute=?, amount = ?
 	       WHERE id=?;""",
-        (data.wallet, data.lnurl, data.description, data.timer_minute, jobconfig_id),
+        (data.wallet, data.lnurl, data.description, data.timer_minute, data.amount, jobconfig_id),
     )
     return await get_jobconfig(jobconfig_id)
 

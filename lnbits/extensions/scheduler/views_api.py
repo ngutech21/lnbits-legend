@@ -32,7 +32,7 @@ from .crud import create_jobconfig, delete_jobconfig, get_jobconfigs, update_job
 async def api_jobconfig_execute(
     data: CreateJobConfig, wallet: WalletTypeInfo = Depends(get_key_type)
 ):
-    jobConfig = JobConfig(id=123, wallet=data.wallet, lnurl=data.lnurl, timer_minute=data.timer_minute, description=data.description)
+    jobConfig = JobConfig(id=123, wallet=data.wallet, lnurl=data.lnurl, timer_minute=data.timer_minute, description=data.description, amount=data.amount)
         
     await pay_jobconfig_invoice(jobConfig)
     return jobConfig.dict()
