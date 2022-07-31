@@ -19,7 +19,8 @@ async def get_jobconfigs(user: str) -> List[JobConfig]:
 async def get_jobconfig(user: str, id: str) -> JobConfig:
     logger.debug(f"user {user}")
     rows = await db.fetchall(
-        """SELECT * FROM scheduler.job_config WHERE "user_name" = ? and id=? """, (user, id)
+        """SELECT * FROM scheduler.job_config WHERE "user_name" = ? and id=? """,
+        (user, id),
     )
     return rows[0]
 
@@ -31,19 +32,38 @@ async def create_jobconfig(user: str, data: CreateJobConfig) -> JobConfig:
         """INSERT INTO scheduler.job_config(
 	       id, user_name, wallet, lnurl, description, timer_minute, amount)
 	       VALUES (?, ?, ?, ?, ?, ?, ?);""",
-        (jobconfig_id, user, data.wallet, data.lnurl, data.description, data.timer_minute, data.amount),
+        (
+            jobconfig_id,
+            user,
+            data.wallet,
+            data.lnurl,
+            data.description,
+            data.timer_minute,
+            data.amount,
+        ),
     )
     return await get_jobconfig(jobconfig_id)
 
-async def update_jobconfig(user: str, jobconfig_id: str,  data: CreateJobConfig) -> JobConfig:
+
+async def update_jobconfig(
+    user: str, jobconfig_id: str, data: CreateJobConfig
+) -> JobConfig:
     logger.debug(f"create_jobconfig user {user} data {data}")
     rows = await db.execute(
         """UPDATE scheduler.job_config
 	       SET wallet=?, lnurl=?, description=?, timer_minute=?, amount = ?
 	       WHERE id=?;""",
-        (data.wallet, data.lnurl, data.description, data.timer_minute, data.amount, jobconfig_id),
+        (
+            data.wallet,
+            data.lnurl,
+            data.description,
+            data.timer_minute,
+            data.amount,
+            jobconfig_id,
+        ),
     )
     return await get_jobconfig(jobconfig_id)
+
 
 async def delete_jobconfig(user: str, jobconfig_id: str) -> None:
     logger.debug(f"delete_jobconfig user {user}")
@@ -59,5 +79,5 @@ async def get_jobconfig(job_config_id: str) -> JobConfig:
         """SELECT * FROM scheduler.job_config WHERE id = ?""", (job_config_id)
     )
     if len(rows) > 0:
-        return JobConfig.from_row(rows[0]) 
-    return 
+        return JobConfig.from_row(rows[0])
+    return

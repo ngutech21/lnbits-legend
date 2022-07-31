@@ -10,7 +10,7 @@ class JobConfig(BaseModel):
     timer_minute: int
     description: str
     amount: int
-    
+
     @classmethod
     def from_row(cls, row: Row) -> "JobConfig":
         return cls(**dict(row))
@@ -22,4 +22,3 @@ class CreateJobConfig(BaseModel):
     timer_minute: int = Query(...)
     description: str = Query(...)
     amount: int = Query(...)
-    

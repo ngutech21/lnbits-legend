@@ -19,10 +19,7 @@ import traceback
 
 logger.add("out.log", backtrace=True, diagnose=True)
 
-from lnbits.decorators import (
-    WalletTypeInfo,
-    get_key_type
-)
+from lnbits.decorators import WalletTypeInfo, get_key_type
 
 
 from .crud import create_jobconfig, delete_jobconfig, get_jobconfigs, update_jobconfig
@@ -32,8 +29,15 @@ from .crud import create_jobconfig, delete_jobconfig, get_jobconfigs, update_job
 async def api_jobconfig_execute(
     data: CreateJobConfig, wallet: WalletTypeInfo = Depends(get_key_type)
 ):
-    jobConfig = JobConfig(id=123, wallet=data.wallet, lnurl=data.lnurl, timer_minute=data.timer_minute, description=data.description, amount=data.amount)
-        
+    jobConfig = JobConfig(
+        id=123,
+        wallet=data.wallet,
+        lnurl=data.lnurl,
+        timer_minute=data.timer_minute,
+        description=data.description,
+        amount=data.amount,
+    )
+
     await pay_jobconfig_invoice(jobConfig)
     return jobConfig.dict()
 
@@ -48,17 +52,21 @@ async def api_jobconfig_create(
 
 @scheduler_ext.put("/api/v1/jobconfigs/{jobconfig_id}")
 async def api_jobconfig_update(
-    data: CreateJobConfig, jobconfig_id: str= Query(None), wallet: WalletTypeInfo = Depends(get_key_type)
+    data: CreateJobConfig,
+    jobconfig_id: str = Query(None),
+    wallet: WalletTypeInfo = Depends(get_key_type),
 ):
-    conf = await update_jobconfig(user=wallet.wallet.user, jobconfig_id=jobconfig_id, data=data)
+    conf = await update_jobconfig(
+        user=wallet.wallet.user, jobconfig_id=jobconfig_id, data=data
+    )
     return conf.dict()
+
 
 @scheduler_ext.delete("/api/v1/jobconfigs/{jobconfig_id}")
 async def api_jobconfig_update(
-    jobconfig_id: str= Query(None), wallet: WalletTypeInfo = Depends(get_key_type)
+    jobconfig_id: str = Query(None), wallet: WalletTypeInfo = Depends(get_key_type)
 ):
     await delete_jobconfig(user=wallet.wallet.user, jobconfig_id=jobconfig_id)
-    
 
 
 @scheduler_ext.get("/api/v1/jobconfigs")
