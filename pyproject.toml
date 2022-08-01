@@ -91,6 +91,4 @@ exclude = """(?x)(
 
 [tool.pytest.ini_options]
 addopts = "--durations=1 -s --cov=lnbits --cov-report=xml"
-testpaths = [
-  "tests"
-]
+testpaths = ["tests"]

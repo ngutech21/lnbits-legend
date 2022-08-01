@@ -8,6 +8,7 @@ from lnbits.core.services import pay_invoice
 from lnbits import bolt11
 from loguru import logger
 from typing import Final
+from lnbits.extensions.scheduler.crud import get_jobconfigs
 
 
 async def pay_jobconfig_invoice(config: JobConfig):
@@ -19,35 +20,34 @@ async def pay_jobconfig_invoice(config: JobConfig):
         resp: httpx.Response = await client.get(lnurl.url)
 
         AMOUNT_MSAT: Final = config.amount * 1_000
-        for i in range(5):
-            print(f"payment {i}")
-            result = LnurlResponse.from_dict(resp.json())
-            print(f"callback {result.callback}")
 
-            # get invoice
-            invoiceResp: httpx.Response = await client.get(
-                f"{result.callback}?amount={AMOUNT_MSAT}"
-            )
-            if invoiceResp.status_code != 200:
-                logger.warning("invalid request")
-                continue
+        print(f"payment")
+        result = LnurlResponse.from_dict(resp.json())
+        print(f"callback {result.callback}")
 
-            json = invoiceResp.json()
-            invoice = json["pr"]
-            decoded: bolt11.Invoice = bolt11.decode(invoice)
-            validAmount: int = decoded.amount_msat == AMOUNT_MSAT
+        # get invoice
+        invoiceResp: httpx.Response = await client.get(
+            f"{result.callback}?amount={AMOUNT_MSAT}"
+        )
+        if invoiceResp.status_code != 200:
+            logger.warning("invalid request")
+            return
 
-            logger.debug(
-                f"bolt11.decoded {decoded.payment_hash}  {decoded.amount_msat} valid {AMOUNT_MSAT}"
-            )
-            if not validAmount:
-                logger.warning(f"invalid amount {config}")
-                continue
+        json = invoiceResp.json()
+        invoice = json["pr"]
+        decoded: bolt11.Invoice = bolt11.decode(invoice)
+        validAmount: int = decoded.amount_msat == AMOUNT_MSAT
 
-            print(f"invoiceresp {invoiceResp}")
-            await pay_invoice(
-                wallet_id=config.wallet,
-                payment_request=invoice,
-                description=f"payment {i}",
-            )
-            sleep(2)
+        logger.debug(
+            f"bolt11.decoded {decoded.payment_hash}  {decoded.amount_msat} valid {AMOUNT_MSAT}"
+        )
+        if not validAmount:
+            logger.warning(f"invalid amount {config}")
+            return
+
+        print(f"invoiceresp {invoiceResp}")
+        await pay_invoice(
+            wallet_id=config.wallet,
+            payment_request=invoice,
+            description=f"payment",
+        )

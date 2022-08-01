@@ -16,6 +16,12 @@ async def get_jobconfigs(user: str) -> List[JobConfig]:
     return [JobConfig.from_row(row) for row in rows]
 
 
+#FIXME merge with get_jobconfigs()
+async def get_all_jobconfigs() -> List[JobConfig]:
+    rows = await db.fetchall("""SELECT * FROM scheduler.job_config """)
+    return [JobConfig.from_row(row) for row in rows]
+
+
 async def get_jobconfig(user: str, id: str) -> JobConfig:
     logger.debug(f"user {user}")
     rows = await db.fetchall(

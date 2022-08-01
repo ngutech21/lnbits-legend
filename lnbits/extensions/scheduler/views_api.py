@@ -6,7 +6,7 @@
 # (use httpx just like requests, except instead of response.ok there's only the
 #  response.is_error that is its inverse)
 
-from http import HTTPStatus
+from datetime import datetime
 from typing import List
 
 from fastapi import Query
@@ -16,13 +16,26 @@ from . import scheduler_ext
 from fastapi.params import Depends
 from loguru import logger
 import traceback
-
-logger.add("out.log", backtrace=True, diagnose=True)
-
 from lnbits.decorators import WalletTypeInfo, get_key_type
+from .crud import (
+    create_jobconfig,
+    delete_jobconfig,
+    get_all_jobconfigs,
+    get_jobconfigs,
+    update_jobconfig,
+)
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
-from .crud import create_jobconfig, delete_jobconfig, get_jobconfigs, update_jobconfig
+async def create_apjobs(apscheduler: AsyncIOScheduler):
+    for j in await get_all_jobconfigs():
+        print(f"create apjob {j}")
+        apscheduler.add_job(
+            func=pay_jobconfig_invoice,
+            trigger="interval",
+            args=[j],
+            seconds=j.timer_minute,
+        )  # FIXME use seconds for testing purpose
 
 
 @scheduler_ext.post("/api/v1/execute/")
@@ -30,7 +43,7 @@ async def api_jobconfig_execute(
     data: CreateJobConfig, wallet: WalletTypeInfo = Depends(get_key_type)
 ):
     jobConfig = JobConfig(
-        id=123, #FIXME
+        id=123,  # FIXME
         wallet=data.wallet,
         lnurl=data.lnurl,
         timer_minute=data.timer_minute,
