@@ -30,7 +30,7 @@ async def api_jobconfig_execute(
     data: CreateJobConfig, wallet: WalletTypeInfo = Depends(get_key_type)
 ):
     jobConfig = JobConfig(
-        id=123,
+        id=123, #FIXME
         wallet=data.wallet,
         lnurl=data.lnurl,
         timer_minute=data.timer_minute,

@@ -8,7 +8,7 @@
     <h5 class="text-subtitle1 q-mt-none q-mb-md">
       Scheduler
     </h5>
-    <q-btn unelevated color="primary" @click="formDialog.show = true">New job config</q-btn>
+    <q-btn unelevated color="primary" @click="formDialog.show = true">New job</q-btn>
     <q-btn unelevated color="primary" @click="executeJobConfig()">Execute</q-btn>
 
     <q-separator class="q-my-lg"></q-separator>
@@ -31,7 +31,7 @@
           dense
           v-model.trim="formDialog.data.description"
           type="text"
-          label="description"
+          label="Description"
         ></q-input>
         
         <q-input
@@ -39,7 +39,7 @@
           dense
           v-model.trim="formDialog.data.timer_minute"
           type="number"
-          label="minute"
+          label="Minute"
         ></q-input>
 
         <q-input
@@ -47,7 +47,7 @@
           dense
           v-model.trim="formDialog.data.lnurl"
           type="text"
-          label="lnurl"
+          label="Lnurl"
         ></q-input>
 
         <q-input
@@ -55,7 +55,7 @@
           dense
           v-model.trim="formDialog.data.amount"
           type="number"
-          label="amount (sat)"
+          label="Amount (Sat)"
         ></q-input>
 
         <div class="row q-mt-lg">
@@ -64,7 +64,7 @@
               unelevated
               color="primary"
               type="submit"
-              >Update</q-btn
+              >Update Job</q-btn
 >
             <q-btn
               v-else
@@ -72,7 +72,7 @@
               color="primary"
               :disable="formDialog.data.wallet == null"
               type="submit"
-              >Create</q-btn>
+              >Create Job</q-btn>
             <q-btn v-close-popup flat color="grey" class="q-ml-auto">Cancel</q-btn>
           </div>
       </q-form>

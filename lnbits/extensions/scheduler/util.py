@@ -38,7 +38,7 @@ async def pay_jobconfig_invoice(config: JobConfig):
             validAmount: int = decoded.amount_msat == AMOUNT_MSAT
 
             logger.debug(
-                f"bol1.decoded {decoded.payment_hash}  {decoded.amount_msat} valid {AMOUNT_MSAT}"
+                f"bolt11.decoded {decoded.payment_hash}  {decoded.amount_msat} valid {AMOUNT_MSAT}"
             )
             if not validAmount:
                 logger.warning(f"invalid amount {config}")
