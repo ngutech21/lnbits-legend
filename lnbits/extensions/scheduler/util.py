@@ -1,5 +1,4 @@
 from ssl import VerifyMode
-from time import sleep
 
 import httpx
 from lnbits.extensions.scheduler.models import JobConfig
@@ -8,7 +7,6 @@ from lnbits.core.services import pay_invoice
 from lnbits import bolt11
 from loguru import logger
 from typing import Final
-from lnbits.extensions.scheduler.crud import get_jobconfigs
 
 
 async def pay_jobconfig_invoice(config: JobConfig):

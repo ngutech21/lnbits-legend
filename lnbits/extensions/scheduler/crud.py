@@ -2,10 +2,9 @@ from typing import List
 
 from loguru import logger
 
-from lnbits.extensions.satspay.crud import get_charge
 from lnbits.helpers import urlsafe_short_hash
-from . import db
-from .models import CreateJobConfig, JobConfig
+from lnbits.extensions.scheduler import db
+from lnbits.extensions.scheduler.models import CreateJobConfig, JobConfig
 
 
 async def get_jobconfigs(user: str) -> List[JobConfig]:
@@ -16,7 +15,7 @@ async def get_jobconfigs(user: str) -> List[JobConfig]:
     return [JobConfig.from_row(row) for row in rows]
 
 
-#FIXME merge with get_jobconfigs()
+# FIXME merge with get_jobconfigs()
 async def get_all_jobconfigs() -> List[JobConfig]:
     rows = await db.fetchall("""SELECT * FROM scheduler.job_config """)
     return [JobConfig.from_row(row) for row in rows]
@@ -48,7 +47,23 @@ async def create_jobconfig(user: str, data: CreateJobConfig) -> JobConfig:
             data.amount,
         ),
     )
-    return await get_jobconfig(jobconfig_id)
+    return await get_jobconfig_allusers(job_config_id=jobconfig_id)
+
+
+async def update_jobconfig_scheduler_job_id(
+    user: str, jobconfig_id: str, scheduler_job_id: str
+) -> JobConfig:
+    logger.debug(f"create_jobconfig user {user} jobid {scheduler_job_id}")
+    rows = await db.execute(
+        """UPDATE scheduler.job_config
+	       SET scheduler_job_id = ?
+	       WHERE id = ?;""",
+        (
+            scheduler_job_id,
+            jobconfig_id,
+        ),
+    )
+    return await get_jobconfig_allusers(job_config_id=jobconfig_id)
 
 
 async def update_jobconfig(
@@ -68,7 +83,7 @@ async def update_jobconfig(
             jobconfig_id,
         ),
     )
-    return await get_jobconfig(jobconfig_id)
+    return await get_jobconfig_allusers(job_config_id=jobconfig_id)
 
 
 async def delete_jobconfig(user: str, jobconfig_id: str) -> None:
@@ -80,7 +95,7 @@ async def delete_jobconfig(user: str, jobconfig_id: str) -> None:
     )
 
 
-async def get_jobconfig(job_config_id: str) -> JobConfig:
+async def get_jobconfig_allusers(job_config_id: str) -> JobConfig:
     rows = await db.fetchall(
         """SELECT * FROM scheduler.job_config WHERE id = ?""", (job_config_id)
     )

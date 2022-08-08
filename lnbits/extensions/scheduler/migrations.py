@@ -9,7 +9,8 @@ async def m001_initial(db):
            lnurl TEXT NOT NULL,
            description TEXT,
            timer_minute int NOT NULL,
-           amount int NOT NULL
+           amount int NOT NULL,
+           scheduler_job_id TEXT
        );
    """
     )

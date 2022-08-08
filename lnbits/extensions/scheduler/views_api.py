@@ -6,38 +6,54 @@
 # (use httpx just like requests, except instead of response.ok there's only the
 #  response.is_error that is its inverse)
 
-from datetime import datetime
-from typing import List
 
 from fastapi import Query
 from lnbits.extensions.scheduler.models import CreateJobConfig, JobConfig
 from lnbits.extensions.scheduler.util import pay_jobconfig_invoice
-from . import scheduler_ext
+from lnbits.extensions.scheduler import scheduler_ext, apscheduler
 from fastapi.params import Depends
 from loguru import logger
 import traceback
 from lnbits.decorators import WalletTypeInfo, get_key_type
-from .crud import (
+from lnbits.extensions.scheduler.crud import (
     create_jobconfig,
     delete_jobconfig,
     get_all_jobconfigs,
+    get_jobconfig,
     get_jobconfigs,
     update_jobconfig,
+    update_jobconfig_scheduler_job_id,
 )
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
-async def create_apjobs(apscheduler: AsyncIOScheduler):
+def apscheduler_add_job(jobconfig: JobConfig) -> str:
+    job = apscheduler.add_job(
+        func=pay_jobconfig_invoice,
+        trigger="interval",
+        args=[jobconfig],
+        seconds=jobconfig.timer_minute,  # FIXME  use seconds for testing purpose
+    )
+    jobconfig.scheduler_job_id = job.id
+    return job.id
+
+
+def apscheduler_update_job(jobconfig: JobConfig):
+    logger.debug(f">>>apscheduler_update_job call")
+    apscheduler.remove_job(job_id=jobconfig.scheduler_job_id)
+    apscheduler_add_job(jobconfig=jobconfig)
+
+
+def apscheduler_delete_job(jobconfigId: str):
+    apscheduler.remove_job(jobconfigId)
+
+
+async def create_apjobs():
     for j in await get_all_jobconfigs():
         print(f"create apjob {j}")
-        apscheduler.add_job(
-            func=pay_jobconfig_invoice,
-            trigger="interval",
-            args=[j],
-            seconds=j.timer_minute,
-        )  # FIXME use seconds for testing purpose
+        apscheduler_add_job(j)
 
 
+# FIXME remove execute API
 @scheduler_ext.post("/api/v1/execute/")
 async def api_jobconfig_execute(
     data: CreateJobConfig, wallet: WalletTypeInfo = Depends(get_key_type)
@@ -60,6 +76,11 @@ async def api_jobconfig_create(
     data: CreateJobConfig, wallet: WalletTypeInfo = Depends(get_key_type)
 ):
     conf = await create_jobconfig(user=wallet.wallet.user, data=data)
+    scheduler_job_id = apscheduler_add_job(conf)
+    logger.debug(f"create {conf} {scheduler_job_id}")
+    await update_jobconfig_scheduler_job_id(
+        user=wallet.wallet.user, jobconfig_id=conf.id, scheduler_job_id=scheduler_job_id
+    )
     return conf.dict()
 
 
@@ -72,6 +93,12 @@ async def api_jobconfig_update(
     conf = await update_jobconfig(
         user=wallet.wallet.user, jobconfig_id=jobconfig_id, data=data
     )
+    apscheduler_update_job(conf)
+    await update_jobconfig_scheduler_job_id(
+        user=wallet.wallet.user,
+        jobconfig_id=conf.id,
+        scheduler_job_id=conf.scheduler_job_id,
+    )
     return conf.dict()
 
 
@@ -79,6 +106,8 @@ async def api_jobconfig_update(
 async def api_jobconfig_update(
     jobconfig_id: str = Query(None), wallet: WalletTypeInfo = Depends(get_key_type)
 ):
+    job = await get_jobconfig(jobconfig_id)
+    apscheduler_delete_job(job.scheduler_job_id)  # FIXME error handling
     await delete_jobconfig(user=wallet.wallet.user, jobconfig_id=jobconfig_id)
 
 
